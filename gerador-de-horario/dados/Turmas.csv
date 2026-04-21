@@ -1,0 +1,5 @@
+id_turma,nome,curso,id_disciplinas,quantidade_alunos
+1,ADS-2024-N1,Análise e Desenvolvimento de Sistemas,101;102;103,38
+2,ADS-2024-N2,Análise e Desenvolvimento de Sistemas,102;104;105,28
+3,SI-2024-M1,Sistemas de Informação,101;103;106,32
+4,CC-2024-N1,Ciência da Computação,101;104;107,20

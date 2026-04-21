@@ -1,0 +1,38 @@
+﻿id_aula,dia,bloco,hora_inicio,hora_fim,disciplina,id_disciplina,professor,id_professor,turma,id_turma,curso,sala,id_sala,capacidade_sala,alunos_turma
+1,Quinta,1,07:00,07:50,Estrutura de Dados,104,Carlos Eduardo Souza,2,ADS-2024-N2,2,Análise e Desenvolvimento de Sistemas,B201,3,50,28
+2,Quinta,2,08:00,08:50,Estrutura de Dados,104,Carlos Eduardo Souza,2,CC-2024-N1,4,Ciência da Computação,B201,3,50,20
+3,Terca,1,07:00,07:50,Estrutura de Dados,104,Carlos Eduardo Souza,2,ADS-2024-N2,2,Análise e Desenvolvimento de Sistemas,B201,3,50,28
+4,Terca,2,08:00,08:50,Estrutura de Dados,104,Carlos Eduardo Souza,2,CC-2024-N1,4,Ciência da Computação,B201,3,50,20
+5,Quinta,3,09:00,09:50,Estrutura de Dados,104,Carlos Eduardo Souza,2,ADS-2024-N2,2,Análise e Desenvolvimento de Sistemas,B201,3,50,28
+6,Quinta,4,10:00,10:50,Estrutura de Dados,104,Carlos Eduardo Souza,2,CC-2024-N1,4,Ciência da Computação,B201,3,50,20
+7,Quinta,5,11:00,11:50,Estrutura de Dados,104,Carlos Eduardo Souza,2,ADS-2024-N2,2,Análise e Desenvolvimento de Sistemas,B201,3,50,28
+8,Quinta,6,12:00,12:50,Estrutura de Dados,104,Carlos Eduardo Souza,2,CC-2024-N1,4,Ciência da Computação,B201,3,50,20
+9,Quinta,7,13:00,13:50,Programação Orientada a Objetos,102,Carlos Eduardo Souza,2,ADS-2024-N1,1,Análise e Desenvolvimento de Sistemas,B201,3,50,38
+10,Quinta,8,14:00,14:50,Programação Orientada a Objetos,102,Carlos Eduardo Souza,2,ADS-2024-N2,2,Análise e Desenvolvimento de Sistemas,B201,3,50,28
+11,Terca,3,09:00,09:50,Programação Orientada a Objetos,102,Carlos Eduardo Souza,2,ADS-2024-N1,1,Análise e Desenvolvimento de Sistemas,B201,3,50,38
+12,Terca,4,10:00,10:50,Programação Orientada a Objetos,102,Carlos Eduardo Souza,2,ADS-2024-N2,2,Análise e Desenvolvimento de Sistemas,B201,3,50,28
+13,Terca,5,11:00,11:50,Programação Orientada a Objetos,102,Carlos Eduardo Souza,2,ADS-2024-N1,1,Análise e Desenvolvimento de Sistemas,B201,3,50,38
+14,Terca,6,12:00,12:50,Programação Orientada a Objetos,102,Carlos Eduardo Souza,2,ADS-2024-N2,2,Análise e Desenvolvimento de Sistemas,B201,3,50,28
+15,Quarta,1,07:00,07:50,Redes de Computadores,105,Roberto Alves,4,ADS-2024-N2,2,Análise e Desenvolvimento de Sistemas,B201,3,50,28
+16,Sexta,1,07:00,07:50,Redes de Computadores,105,Roberto Alves,4,ADS-2024-N2,2,Análise e Desenvolvimento de Sistemas,B201,3,50,28
+17,Quarta,1,07:00,07:50,Cálculo I,101,Ana Paula Ferreira,1,ADS-2024-N1,1,Análise e Desenvolvimento de Sistemas,A101,1,40,38
+18,Quarta,2,08:00,08:50,Cálculo I,101,Ana Paula Ferreira,1,SI-2024-M1,3,Sistemas de Informação,B201,3,50,32
+19,Quarta,3,09:00,09:50,Cálculo I,101,Ana Paula Ferreira,1,CC-2024-N1,4,Ciência da Computação,B201,3,50,20
+20,Segunda,1,07:00,07:50,Cálculo I,101,Ana Paula Ferreira,1,ADS-2024-N1,1,Análise e Desenvolvimento de Sistemas,B201,3,50,38
+21,Segunda,2,08:00,08:50,Cálculo I,101,Ana Paula Ferreira,1,SI-2024-M1,3,Sistemas de Informação,B201,3,50,32
+22,Segunda,3,09:00,09:50,Cálculo I,101,Ana Paula Ferreira,1,CC-2024-N1,4,Ciência da Computação,B201,3,50,20
+23,Sexta,1,07:00,07:50,Cálculo I,101,Ana Paula Ferreira,1,ADS-2024-N1,1,Análise e Desenvolvimento de Sistemas,A101,1,40,38
+24,Sexta,2,08:00,08:50,Cálculo I,101,Ana Paula Ferreira,1,SI-2024-M1,3,Sistemas de Informação,B201,3,50,32
+25,Sexta,3,09:00,09:50,Cálculo I,101,Ana Paula Ferreira,1,CC-2024-N1,4,Ciência da Computação,B201,3,50,20
+26,Quarta,4,10:00,10:50,Cálculo I,101,Ana Paula Ferreira,1,ADS-2024-N1,1,Análise e Desenvolvimento de Sistemas,B201,3,50,38
+27,Quarta,5,11:00,11:50,Cálculo I,101,Ana Paula Ferreira,1,SI-2024-M1,3,Sistemas de Informação,B201,3,50,32
+28,Quarta,6,12:00,12:50,Cálculo I,101,Ana Paula Ferreira,1,CC-2024-N1,4,Ciência da Computação,B201,3,50,20
+29,Quarta,7,13:00,13:50,Inteligência Artificial,107,Ana Paula Ferreira,1,CC-2024-N1,4,Ciência da Computação,B201,3,50,20
+30,Segunda,4,10:00,10:50,Inteligência Artificial,107,Ana Paula Ferreira,1,CC-2024-N1,4,Ciência da Computação,B201,3,50,20
+31,Quarta,1,07:00,07:50,Engenharia de Software,106,Maria José Lima,3,SI-2024-M1,3,Sistemas de Informação,A102,2,35,32
+32,Quinta,1,07:00,07:50,Engenharia de Software,106,Maria José Lima,3,SI-2024-M1,3,Sistemas de Informação,A101,1,40,32
+33,Segunda,1,07:00,07:50,Engenharia de Software,106,Maria José Lima,3,SI-2024-M1,3,Sistemas de Informação,A101,1,40,32
+34,Quarta,2,08:00,08:50,Banco de Dados,103,Maria José Lima,3,ADS-2024-N1,1,Análise e Desenvolvimento de Sistemas,A101,1,40,38
+35,Quarta,3,09:00,09:50,Banco de Dados,103,Maria José Lima,3,SI-2024-M1,3,Sistemas de Informação,A101,1,40,32
+36,Quinta,2,08:00,08:50,Banco de Dados,103,Maria José Lima,3,ADS-2024-N1,1,Análise e Desenvolvimento de Sistemas,A101,1,40,38
+37,Quinta,3,09:00,09:50,Banco de Dados,103,Maria José Lima,3,SI-2024-M1,3,Sistemas de Informação,A101,1,40,32
