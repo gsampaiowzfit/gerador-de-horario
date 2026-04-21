@@ -1,0 +1,8 @@
+id_disciplina,nome,carga_horaria_semanal,id_professor
+101,Cálculo I,4,1
+102,Programação Orientada a Objetos,3,2
+103,Banco de Dados,2,3
+104,Estrutura de Dados,4,2
+105,Redes de Computadores,2,4
+106,Engenharia de Software,3,3
+107,Inteligência Artificial,2,1
