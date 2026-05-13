@@ -39,6 +39,7 @@ class Turma:
     id_turma: int
     nome: str
     curso: str
+    periodo: str  # 'Manha' ou 'Noite'
     id_disciplinas: List[int] = field(default_factory=list)
     quantidade_alunos: int = 0
 

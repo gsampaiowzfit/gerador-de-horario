@@ -156,12 +156,12 @@ class GradeVisual(tk.Frame):
     def __init__(
         self,
         parent: tk.Widget,
-        n_blocos: int = 8,
+        blocos: Optional[List[int]] = None,
         modo: str = "turma",   # "turma" | "professor"
         dias: Optional[List[str]] = None,
     ) -> None:
         super().__init__(parent, bg=CORES["bg_card"])
-        self._n_blocos = n_blocos
+        self._blocos = blocos or list(range(1, 9))
         self._modo = modo
         self._dias = dias or DIAS_SEMANA
         self._celulas: dict[tuple[str, int], tk.Label] = {}
@@ -173,7 +173,9 @@ class GradeVisual(tk.Frame):
         self.columnconfigure(1, minsize=self._LARG_HORA)
         for c in range(2, 2 + len(self._dias)):
             self.columnconfigure(c, minsize=self._LARG_DIA, weight=1)
-        for r in range(self._n_blocos + 1):
+            
+        n_linhas = len(self._blocos)
+        for r in range(n_linhas + 1):
             self.rowconfigure(
                 r,
                 minsize=self._ALT_HEADER if r == 0 else self._ALT_CELULA,
@@ -186,17 +188,20 @@ class GradeVisual(tk.Frame):
             self._lbl_cabecalho(0, c, ALIAS_DIA.get(dia, dia))
 
         # Linhas de blocos
-        for bloco in range(1, self._n_blocos + 1):
+        for i, bloco in enumerate(self._blocos, 1):
             h = Horario(dia=self._dias[0], numero_bloco=bloco)
+
+            # Texto do bloco (1-4 para ambos os períodos na exibição)
+            texto_bloco = str(bloco if bloco <= 4 else bloco - 4)
 
             # Coluna bloco
             tk.Label(
-                self, text=str(bloco),
+                self, text=texto_bloco,
                 bg=CORES["celula_vazia"],
                 fg=CORES["texto_secundario"],
                 font=FONTES["grade_bloco"],
                 relief="flat",
-            ).grid(row=bloco, column=0, sticky="nsew", padx=1, pady=1)
+            ).grid(row=i, column=0, sticky="nsew", padx=1, pady=1)
 
             # Coluna horário
             tk.Label(
@@ -206,7 +211,7 @@ class GradeVisual(tk.Frame):
                 font=FONTES["grade_bloco"],
                 justify="center",
                 relief="flat",
-            ).grid(row=bloco, column=1, sticky="nsew", padx=1, pady=1)
+            ).grid(row=i, column=1, sticky="nsew", padx=1, pady=1)
 
             # Células de dias
             for c, dia in enumerate(self._dias, 2):
@@ -221,7 +226,7 @@ class GradeVisual(tk.Frame):
                     relief="flat",
                     padx=4, pady=4,
                 )
-                cell.grid(row=bloco, column=c, sticky="nsew", padx=1, pady=1)
+                cell.grid(row=i, column=c, sticky="nsew", padx=1, pady=1)
                 self._celulas[(dia, bloco)] = cell
 
     def _lbl_cabecalho(self, row: int, col: int, texto: str) -> None:

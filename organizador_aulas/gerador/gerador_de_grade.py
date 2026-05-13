@@ -73,33 +73,29 @@ class _BacktrackingTimeout(Exception):
 @dataclass
 class Tarefa:
     """
-    Representa UM bloco de 50 minutos a ser alocado para (turma, disciplina).
-
-    Para uma disciplina com carga_horaria_semanal = 3, serão criadas
-    3 instâncias de Tarefa para cada turma que a cursa, identificadas por
-    numero_bloco_disc = 1, 2 e 3.
+    Representa um GRUPO de blocos (neste caso, uma dupla de 100 min)
+    a ser alocado para (turma, disciplina).
     """
 
     turma: Turma
     disciplina: Disciplina
     professor: Professor
-    numero_bloco_disc: int  # qual bloco desta disciplina (1..N)
+    indices_blocos: List[int]  # Ex: [1, 2] ou [3, 4] relativo à carga da disc
+
+    @property
+    def tamanho(self) -> int:
+        return len(self.indices_blocos)
 
     @property
     def chave_grupo(self) -> ChaveGrupo:
-        """(id_turma, id_disciplina) — identifica o grupo de tarefas."""
         return (self.turma.id_turma, self.disciplina.id_disciplina)
 
     @property
-    def prioridade(self) -> Tuple[int, int]:
-        """
-        Chave de ordenação para alocação mais restritiva primeiro:
-          (dias_disponiveis ASC, carga_horaria DESC, numero_bloco ASC)
-        """
+    def prioridade(self) -> Tuple[int, int, int]:
         return (
-            self.professor.quantidade_dias_disponiveis,  # menos dias → mais urgente
-            -self.disciplina.carga_horaria_semanal,       # mais blocos → mais urgente
-            self.numero_bloco_disc,
+            self.professor.quantidade_dias_disponiveis,
+            -self.disciplina.carga_horaria_semanal,
+            self.indices_blocos[0],
         )
 
 
@@ -131,60 +127,60 @@ class _EstadoBacktrack:
 
     # ------------------------------------------------------------------
 
-    def alocar(self, tarefa: Tarefa, slot: Slot, sala: Sala) -> Aula:
+    def alocar(self, tarefa: Tarefa, slots: List[Slot], sala: Sala) -> List[Aula]:
         """
-        Registra a alocação de uma tarefa em um slot/sala.
-        Retorna o objeto Aula criado.
+        Registra a alocação de uma tarefa (múltiplos slots) em uma sala.
+        Retorna a lista de Aulas criadas.
         """
-        dia, bloco = slot
-        aula = Aula(
-            id_aula=self._proximo_id,
-            disciplina=tarefa.disciplina,
-            professor=tarefa.professor,
-            turma=tarefa.turma,
-            sala=sala,
-            horario=Horario(dia=dia, numero_bloco=bloco),
-        )
-        self._proximo_id += 1
+        aulas_criadas = []
+        for slot in slots:
+            dia, bloco = slot
+            aula = Aula(
+                id_aula=self._proximo_id,
+                disciplina=tarefa.disciplina,
+                professor=tarefa.professor,
+                turma=tarefa.turma,
+                sala=sala,
+                horario=Horario(dia=dia, numero_bloco=bloco),
+            )
+            self._proximo_id += 1
+            
+            id_prof = tarefa.professor.id_professor
+            id_sala = sala.id_sala
+            id_turma = tarefa.turma.id_turma
+            chave = tarefa.chave_grupo
 
-        id_prof = tarefa.professor.id_professor
-        id_sala = sala.id_sala
-        id_turma = tarefa.turma.id_turma
-        chave = tarefa.chave_grupo
+            self.prof_ocupado.setdefault(id_prof, set()).add(slot)
+            self.sala_ocupada.setdefault(id_sala, set()).add(slot)
+            self.turma_ocupada.setdefault(id_turma, set()).add(slot)
+            self.turma_disc_dias.setdefault(chave, set()).add(dia)
+            self.aulas.append(aula)
+            aulas_criadas.append(aula)
 
-        self.prof_ocupado.setdefault(id_prof, set()).add(slot)
-        self.sala_ocupada.setdefault(id_sala, set()).add(slot)
-        self.turma_ocupada.setdefault(id_turma, set()).add(slot)
-        self.turma_disc_dias.setdefault(chave, set()).add(dia)
-        self.aulas.append(aula)
+        return aulas_criadas
 
-        return aula
+    def desalocar(self, aulas: List[Aula]) -> None:
+        """Desfaz a alocação de um grupo de aulas."""
+        for aula in reversed(aulas):
+            slot: Slot = (aula.horario.dia, aula.horario.numero_bloco)
+            chave: ChaveGrupo = (aula.turma.id_turma, aula.disciplina.id_disciplina)
 
-    def desalocar(self, aula: Aula) -> None:
-        """
-        Desfaz a alocação de uma aula (undo para backtracking).
-        Todas as remoções são O(1).
-        """
-        slot: Slot = (aula.horario.dia, aula.horario.numero_bloco)
-        chave: ChaveGrupo = (aula.turma.id_turma, aula.disciplina.id_disciplina)
+            self.prof_ocupado.get(aula.professor.id_professor, set()).discard(slot)
+            self.sala_ocupada.get(aula.sala.id_sala, set()).discard(slot)
+            self.turma_ocupada.get(aula.turma.id_turma, set()).discard(slot)
 
-        self.prof_ocupado.get(aula.professor.id_professor, set()).discard(slot)
-        self.sala_ocupada.get(aula.sala.id_sala, set()).discard(slot)
-        self.turma_ocupada.get(aula.turma.id_turma, set()).discard(slot)
+            if aula in self.aulas:
+                self.aulas.remove(aula)
 
-        # Remove dia do registro apenas se não há mais nenhuma aula nesse dia para o grupo
-        if aula in self.aulas:
-            self.aulas.remove(aula)
-
-        # Recalcula dias do grupo a partir das aulas remanescentes
-        dias_restantes = {
-            a.horario.dia
-            for a in self.aulas
-            if a.turma.id_turma == aula.turma.id_turma
-            and a.disciplina.id_disciplina == aula.disciplina.id_disciplina
-        }
-        self.turma_disc_dias[chave] = dias_restantes
-        self._proximo_id -= 1
+            # Recalcula dias do grupo
+            dias_restantes = {
+                a.horario.dia
+                for a in self.aulas
+                if a.turma.id_turma == aula.turma.id_turma
+                and a.disciplina.id_disciplina == aula.disciplina.id_disciplina
+            }
+            self.turma_disc_dias[chave] = dias_restantes
+            self._proximo_id -= 1
 
     # ------------------------------------------------------------------
     # Predicados de disponibilidade (O(1))
@@ -390,13 +386,13 @@ class GeradorDeGrade:
             resultado.completa = False
             return resultado
 
-        resultado.total_blocos_necessarios = len(tarefas)
+        resultado.total_blocos_necessarios = sum(t.tamanho for t in tarefas)
         tarefas = self._ordenar_por_prioridade(tarefas)
 
         logger.info(
-            "Iniciando Backtracking: %d blocos a alocar em %d slots disponíveis.",
+            "Iniciando Backtracking: %d blocos individuais (em %d tarefas) a alocar.",
+            resultado.total_blocos_necessarios,
             len(tarefas),
-            len(self._todos_slots),
         )
 
         # Etapa 3 — backtracking
@@ -481,18 +477,16 @@ class GeradorDeGrade:
         tarefa = tarefas[index]
         candidatos = self._candidatos_para_tarefa(tarefa, estado)
 
-        for slot, sala in candidatos:
-            aula = estado.alocar(tarefa, slot, sala)
+        for slots, sala in candidatos:
+            aulas = estado.alocar(tarefa, slots, sala)
 
             try:
                 if self._backtrack(index + 1, tarefas, estado, contagem):
                     return True
             except _BacktrackingTimeout:
-                # Não desfaz — sobe a exceção com o estado parcial intacto
                 raise
 
-            # Esta escolha não levou a uma solução → desfaz e tenta a próxima
-            estado.desalocar(aula)
+            estado.desalocar(aulas)
 
         # Nenhum candidato funcionou → sinaliza falha para o nível superior
         return False
@@ -536,9 +530,9 @@ class GeradorDeGrade:
                     falhas_por_grupo.add(chave)
                 else:
                     resultado.falhas.append(
-                        f"  ↳ Bloco {tarefa.numero_bloco_disc} de "
+                        f"  ↳ Blocos {tarefa.indices_blocos} de "
                         f"'{tarefa.disciplina.nome}' / '{tarefa.turma.nome}' "
-                        "também não pôde ser alocado (mesma causa acima)."
+                        "também não puderam ser alocados."
                     )
 
     # ------------------------------------------------------------------
@@ -549,14 +543,10 @@ class GeradorDeGrade:
         self,
         tarefa: Tarefa,
         estado: _EstadoBacktrack,
-    ) -> List[Tuple[Slot, Sala]]:
+    ) -> List[Tuple[List[Slot], Sala]]:
         """
-        Retorna pares (slot, sala) válidos para a tarefa, respeitando
-        todas as restrições de negócio.
-
-        Ordenação dos slots (heurística):
-          1. Dias não usados por esta (turma, disciplina) — distribui blocos.
-          2. Ordem natural de dia e número de bloco.
+        Retorna grupos de slots (duplas ou individuais) e salas válidas.
+        Garante que as duplas sejam consecutivas e no mesmo turno.
         """
         salas_validas = [
             s for s in self._salas
@@ -565,43 +555,59 @@ class GeradorDeGrade:
         if not salas_validas:
             return []
 
+        # Define slots ou duplas possíveis por turno
+        if tarefa.turma.periodo == "Manha":
+            duplas_base = [(1, 2), (3, 4)]
+            singulares_base = [1, 2, 3, 4]
+        else:
+            duplas_base = [(5, 6), (7, 8)]
+            singulares_base = [5, 6, 7, 8]
+
         dias_usados = (
             estado.dias_usados_pelo_grupo(tarefa.chave_grupo)
             if self._preferir_dias_distintos
             else set()
         )
 
-        # Ordena: dias novos antes de dias já usados (distribuição de carga)
-        slots_ordenados = sorted(
-            self._todos_slots,
-            key=lambda s: (1 if s[0] in dias_usados else 0, s[0], s[1]),
+        candidatos: List[Tuple[List[Slot], Sala]] = []
+        dias_ordenados = sorted(
+            self._dias,
+            key=lambda d: 1 if d in dias_usados else 0
         )
 
-        candidatos: List[Tuple[Slot, Sala]] = []
         id_prof = tarefa.professor.id_professor
         id_turma = tarefa.turma.id_turma
 
-        for slot in slots_ordenados:
-            dia, _ = slot
-
-            # Restrição 1: disponibilidade do professor no dia
+        for dia in dias_ordenados:
             if not tarefa.professor.esta_disponivel_em(dia):
                 continue
-
-            # Restrição 2: professor não tem outra aula neste slot
-            if not estado.professor_livre(id_prof, slot):
-                continue
-
-            # Restrição 3: turma não tem outra aula neste slot
-            if not estado.turma_livre(id_turma, slot):
-                continue
-
-            # Restrição 4: sala disponível com capacidade suficiente
-            for sala in salas_validas:
-                if estado.sala_livre(sala.id_sala, slot):
-                    candidatos.append((slot, sala))
-                    break  # Usa a primeira sala válida para este slot
-
+            
+            if tarefa.tamanho == 2:
+                for b1, b2 in duplas_base:
+                    s1, s2 = (dia, b1), (dia, b2)
+                    if not (estado.professor_livre(id_prof, s1) and estado.professor_livre(id_prof, s2)):
+                        continue
+                    if not (estado.turma_livre(id_turma, s1) and estado.turma_livre(id_turma, s2)):
+                        continue
+                    
+                    for sala in salas_validas:
+                        if estado.sala_livre(sala.id_sala, s1) and estado.sala_livre(sala.id_sala, s2):
+                            candidatos.append(([s1, s2], sala))
+                            break
+            else:
+                # Caso tamanho=1 (carga horária ímpar)
+                for b in singulares_base:
+                    s = (dia, b)
+                    if not estado.professor_livre(id_prof, s):
+                        continue
+                    if not estado.turma_livre(id_turma, s):
+                        continue
+                    
+                    for sala in salas_validas:
+                        if estado.sala_livre(sala.id_sala, s):
+                            candidatos.append(([s], sala))
+                            break
+        
         return candidatos
 
     # ------------------------------------------------------------------
@@ -730,13 +736,21 @@ class GeradorDeGrade:
                     )
                     continue
 
-                for bloco_n in range(1, disc.carga_horaria_semanal + 1):
+                # Cria tarefas em duplas (2 blocos por tarefa)
+                carga = disc.carga_horaria_semanal
+                for i in range(0, carga, 2):
+                    # Se sobrar 1 bloco (carga ímpar), cria tarefa de tamanho 1
+                    # Caso contrário, cria dupla [i+1, i+2]
+                    indices = [i + 1]
+                    if i + 1 < carga:
+                        indices.append(i + 2)
+                        
                     tarefas.append(
                         Tarefa(
                             turma=turma,
                             disciplina=disc,
                             professor=prof,
-                            numero_bloco_disc=bloco_n,
+                            indices_blocos=indices,
                         )
                     )
 

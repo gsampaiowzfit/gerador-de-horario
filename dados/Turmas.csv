@@ -1,5 +1,5 @@
-id_turma,nome,curso,id_disciplinas,quantidade_alunos
-1,ADS-2024-N1,Análise e Desenvolvimento de Sistemas,101;102;103,38
-2,ADS-2024-N2,Análise e Desenvolvimento de Sistemas,102;104;105,28
-3,SI-2024-M1,Sistemas de Informação,101;103;106,32
-4,CC-2024-N1,Ciência da Computação,101;104;107,20
+id_turma,nome,curso,periodo,id_disciplinas,quantidade_alunos
+1,ADS-2024-N1,Analise e Desenvolvimento de Sistemas,Noite,101;102;103;104;105,38
+2,ADS-2024-N2,Analise e Desenvolvimento de Sistemas,Noite,106;107;108;109;110,28
+3,SI-2024-M1,Sistemas de Informação,Manha,101;103;105;107;109,32
+4,CC-2024-M1,Ciencia da Computação,Manha,102;104;106;108;110,20

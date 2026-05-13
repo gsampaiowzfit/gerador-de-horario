@@ -220,18 +220,34 @@ class TelaGradeEntidade(ttk.Frame):
                 )
 
         # Determina blocos necessários
-        n_blocos = max(
-            (a.horario.numero_bloco for a in aulas),
-            default=8,
-        )
-        n_blocos = max(n_blocos, 8)
+        if self._modo == "turma":
+            entidade = self._rl.turmas.get(id_entidade)
+            if entidade and entidade.periodo == "Manha":
+                blocos_exibir = [1, 2, 3, 4]
+            else:
+                blocos_exibir = [5, 6, 7, 8]
+        else:
+            # Para professor, mostra todos os blocos em que ele tem aula
+            # ou pelo menos os blocos do período onde ele tem mais aulas
+            blocos_usados = sorted(list(set(a.horario.numero_bloco for a in aulas)))
+            if not blocos_usados:
+                blocos_exibir = [1, 2, 3, 4] # fallback
+            else:
+                tem_manha = any(b <= 4 for b in blocos_usados)
+                tem_noite = any(b > 4 for b in blocos_usados)
+                if tem_manha and tem_noite:
+                    blocos_exibir = list(range(1, 9))
+                elif tem_noite:
+                    blocos_exibir = [5, 6, 7, 8]
+                else:
+                    blocos_exibir = [1, 2, 3, 4]
 
         # Cria ou recria a GradeVisual
         if self._grade is not None:
             self._grade.destroy()
         self._grade = GradeVisual(
             self._frame_interno,
-            n_blocos=n_blocos,
+            blocos=blocos_exibir,
             modo=self._modo,
         )
         self._grade.pack(padx=8, pady=8, anchor="nw")

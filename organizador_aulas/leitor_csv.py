@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 
 _COLUNAS_PROFESSORES: List[str] = ["id_professor", "nome", "dias_disponiveis"]
 _COLUNAS_DISCIPLINAS: List[str] = ["id_disciplina", "nome", "carga_horaria_semanal"]
-_COLUNAS_TURMAS_BASE: List[str] = ["id_turma", "nome", "curso", "id_disciplinas"]
+_COLUNAS_TURMAS_BASE: List[str] = ["id_turma", "nome", "curso", "periodo", "id_disciplinas"]
 _COLUNAS_SALAS: List[str] = ["id_sala", "numero", "capacidade"]
 
 # Aliases aceitos para a coluna de quantidade de alunos em Turmas.csv
@@ -526,6 +526,18 @@ class LeitorCSV:
             if curso is None:
                 continue
 
+            # --- Período ---
+            periodo = self._parse_str(row.get("periodo"), entidade, linha, "periodo")
+            if periodo is None:
+                continue
+            if periodo.lower() not in ["manha", "noite"]:
+                self._erro(
+                    f"[{entidade}] Linha {linha}: periodo '{periodo}' inválido. "
+                    "Use 'Manha' ou 'Noite'."
+                )
+                continue
+            periodo = "Manha" if periodo.lower() == "manha" else "Noite"
+
             # --- IDs de disciplinas (campo multivalorado) ---
             discs_raw = self._parse_str(
                 row.get("id_disciplinas"), entidade, linha, "id_disciplinas"
@@ -562,6 +574,7 @@ class LeitorCSV:
                     id_turma=id_turma,
                     nome=nome,
                     curso=curso,
+                    periodo=periodo,
                     id_disciplinas=id_disciplinas,
                     quantidade_alunos=qtd_alunos,
                 )
