@@ -7,7 +7,7 @@ em blocos de 50 minutos. Opcionalmente vinculada a um professor responsável.
 
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import List, Optional
 
 
 @dataclass
@@ -40,6 +40,7 @@ class Disciplina:
     nome: str
     carga_horaria_semanal: int  # em blocos de 50 min
     id_professor: Optional[int] = None
+    id_substitutos: List[int] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if self.carga_horaria_semanal < 1:

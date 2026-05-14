@@ -1,11 +1,11 @@
-id_disciplina,nome,carga_horaria_semanal,id_professor
-101,Calculo I,4,1
-102,Programação Orientada a Objetos,4,2
-103,Banco de Dados I,4,3
-104,Estrutura de Dados,4,2
-105,Redes de Computadores,4,4
-106,Engenharia de Software,4,3
-107,Inteligencia Artificial,4,1
-108,Sistemas Operacionais,4,4
-109,Segurança da Informação,4,5
-110,Ética e Cidadania,4,5
+id_disciplina,nome,carga_horaria_semanal,id_professor,id_substitutos
+101,Calculo I,4,1,6;7
+102,Programação Orientada a Objetos,4,2,6;7
+103,Banco de Dados I,4,3,6;7
+104,Estrutura de Dados,4,2,6;7
+105,Redes de Computadores,4,4,6;7
+106,Engenharia de Software,4,3,6;7
+107,Inteligencia Artificial,4,1,6;7
+108,Sistemas Operacionais,4,4,6;7
+109,Segurança da Informação,4,5,6;7
+110,Ética e Cidadania,4,5,6;7

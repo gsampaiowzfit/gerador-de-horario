@@ -79,8 +79,9 @@ class Tarefa:
 
     turma: Turma
     disciplina: Disciplina
-    professor: Professor
+    professor_titular: Professor
     indices_blocos: List[int]  # Ex: [1, 2] ou [3, 4] relativo à carga da disc
+    substitutos: List[Professor] = field(default_factory=list)
 
     @property
     def tamanho(self) -> int:
@@ -93,7 +94,7 @@ class Tarefa:
     @property
     def prioridade(self) -> Tuple[int, int, int]:
         return (
-            self.professor.quantidade_dias_disponiveis,
+            self.professor_titular.quantidade_dias_disponiveis,
             -self.disciplina.carga_horaria_semanal,
             self.indices_blocos[0],
         )
@@ -127,9 +128,9 @@ class _EstadoBacktrack:
 
     # ------------------------------------------------------------------
 
-    def alocar(self, tarefa: Tarefa, slots: List[Slot], sala: Sala) -> List[Aula]:
+    def alocar(self, tarefa: Tarefa, slots: List[Slot], sala: Sala, professor: Professor) -> List[Aula]:
         """
-        Registra a alocação de uma tarefa (múltiplos slots) em uma sala.
+        Registra a alocação de uma tarefa (múltiplos slots) em uma sala com um professor específico.
         Retorna a lista de Aulas criadas.
         """
         aulas_criadas = []
@@ -138,14 +139,14 @@ class _EstadoBacktrack:
             aula = Aula(
                 id_aula=self._proximo_id,
                 disciplina=tarefa.disciplina,
-                professor=tarefa.professor,
+                professor=professor,
                 turma=tarefa.turma,
                 sala=sala,
                 horario=Horario(dia=dia, numero_bloco=bloco),
             )
             self._proximo_id += 1
             
-            id_prof = tarefa.professor.id_professor
+            id_prof = professor.id_professor
             id_sala = sala.id_sala
             id_turma = tarefa.turma.id_turma
             chave = tarefa.chave_grupo
@@ -477,8 +478,8 @@ class GeradorDeGrade:
         tarefa = tarefas[index]
         candidatos = self._candidatos_para_tarefa(tarefa, estado)
 
-        for slots, sala in candidatos:
-            aulas = estado.alocar(tarefa, slots, sala)
+        for slots, sala, prof in candidatos:
+            aulas = estado.alocar(tarefa, slots, sala, prof)
 
             try:
                 if self._backtrack(index + 1, tarefas, estado, contagem):
@@ -523,7 +524,8 @@ class GeradorDeGrade:
 
             candidatos = self._candidatos_para_tarefa(tarefa, estado)
             if candidatos:
-                estado.alocar(tarefa, candidatos[0][0], candidatos[0][1])
+                slots, sala, prof = candidatos[0]
+                estado.alocar(tarefa, slots, sala, prof)
             else:
                 if chave not in falhas_por_grupo:
                     self._registrar_falha_detalhada(tarefa, resultado, estado)
@@ -543,9 +545,9 @@ class GeradorDeGrade:
         self,
         tarefa: Tarefa,
         estado: _EstadoBacktrack,
-    ) -> List[Tuple[List[Slot], Sala]]:
+    ) -> List[Tuple[List[Slot], Sala, Professor]]:
         """
-        Retorna grupos de slots (duplas ou individuais) e salas válidas.
+        Retorna grupos de slots (duplas ou individuais), salas válidas e o professor.
         Garante que as duplas sejam consecutivas e no mesmo turno.
         """
         salas_validas = [
@@ -569,44 +571,48 @@ class GeradorDeGrade:
             else set()
         )
 
-        candidatos: List[Tuple[List[Slot], Sala]] = []
+        candidatos: List[Tuple[List[Slot], Sala, Professor]] = []
         dias_ordenados = sorted(
             self._dias,
             key=lambda d: 1 if d in dias_usados else 0
         )
 
-        id_prof = tarefa.professor.id_professor
         id_turma = tarefa.turma.id_turma
+        
+        # Tenta professor titular e depois substitutos
+        professores_a_tentar = [tarefa.professor_titular] + tarefa.substitutos
 
-        for dia in dias_ordenados:
-            if not tarefa.professor.esta_disponivel_em(dia):
-                continue
-            
-            if tarefa.tamanho == 2:
-                for b1, b2 in duplas_base:
-                    s1, s2 = (dia, b1), (dia, b2)
-                    if not (estado.professor_livre(id_prof, s1) and estado.professor_livre(id_prof, s2)):
-                        continue
-                    if not (estado.turma_livre(id_turma, s1) and estado.turma_livre(id_turma, s2)):
-                        continue
-                    
-                    for sala in salas_validas:
-                        if estado.sala_livre(sala.id_sala, s1) and estado.sala_livre(sala.id_sala, s2):
-                            candidatos.append(([s1, s2], sala))
-                            break
-            else:
-                # Caso tamanho=1 (carga horária ímpar)
-                for b in singulares_base:
-                    s = (dia, b)
-                    if not estado.professor_livre(id_prof, s):
-                        continue
-                    if not estado.turma_livre(id_turma, s):
-                        continue
-                    
-                    for sala in salas_validas:
-                        if estado.sala_livre(sala.id_sala, s):
-                            candidatos.append(([s], sala))
-                            break
+        for prof in professores_a_tentar:
+            id_prof = prof.id_professor
+            for dia in dias_ordenados:
+                if not prof.esta_disponivel_em(dia):
+                    continue
+                
+                if tarefa.tamanho == 2:
+                    for b1, b2 in duplas_base:
+                        s1, s2 = (dia, b1), (dia, b2)
+                        if not (estado.professor_livre(id_prof, s1) and estado.professor_livre(id_prof, s2)):
+                            continue
+                        if not (estado.turma_livre(id_turma, s1) and estado.turma_livre(id_turma, s2)):
+                            continue
+                        
+                        for sala in salas_validas:
+                            if estado.sala_livre(sala.id_sala, s1) and estado.sala_livre(sala.id_sala, s2):
+                                candidatos.append(([s1, s2], sala, prof))
+                                break
+                else:
+                    # Caso tamanho=1 (carga horária ímpar)
+                    for b in singulares_base:
+                        s = (dia, b)
+                        if not estado.professor_livre(id_prof, s):
+                            continue
+                        if not estado.turma_livre(id_turma, s):
+                            continue
+                        
+                        for sala in salas_validas:
+                            if estado.sala_livre(sala.id_sala, s):
+                                candidatos.append(([s], sala, prof))
+                                break
         
         return candidatos
 
@@ -624,18 +630,20 @@ class GeradorDeGrade:
         Analisa e registra a causa específica da impossibilidade de alocação.
         Percorre diagnósticos em cascata para identificar o gargalo exato.
         """
-        prof = tarefa.professor
+        prof = tarefa.professor_titular
         turma = tarefa.turma
         disc = tarefa.disciplina
         prefixo = f"❌ [FALHA] '{disc.nome}' para turma '{turma.nome}'"
 
-        # Diagnóstico 1: professor sem nenhum dia disponível
+        # Diagnóstico 1: professor titular sem nenhum dia disponível
         if not prof.dias_disponiveis:
             resultado.falhas.append(
-                f"{prefixo}: o professor '{prof.nome}' (ID {prof.id_professor}) "
-                "não possui nenhum dia disponível cadastrado. Impossível alocar qualquer bloco."
+                f"{prefixo}: o professor titular '{prof.nome}' (ID {prof.id_professor}) "
+                "não possui nenhum dia disponível cadastrado."
             )
-            return
+            # Se não houver substitutos, para por aqui
+            if not tarefa.substitutos:
+                return
 
         # Diagnóstico 2: todos os slots do professor estão ocupados
         slots_do_prof = [s for s in self._todos_slots if prof.esta_disponivel_em(s[0])]
@@ -691,7 +699,7 @@ class GeradorDeGrade:
 
         # Diagnóstico genérico (não deveria ocorrer se os candidatos forem calculados corretamente)
         resultado.falhas.append(
-            f"{prefixo}: bloco {tarefa.numero_bloco_disc} não pôde ser alocado. "
+            f"{prefixo}: blocos {tarefa.indices_blocos} não puderam ser alocados. "
             "Causa indeterminada — revise manualmente os dados."
         )
 
@@ -736,6 +744,13 @@ class GeradorDeGrade:
                     )
                     continue
 
+                # Busca substitutos
+                substitutos: List[Professor] = []
+                for id_sub in disc.id_substitutos:
+                    p_sub = professores.get(id_sub)
+                    if p_sub:
+                        substitutos.append(p_sub)
+
                 # Cria tarefas em duplas (2 blocos por tarefa)
                 carga = disc.carga_horaria_semanal
                 for i in range(0, carga, 2):
@@ -749,7 +764,8 @@ class GeradorDeGrade:
                         Tarefa(
                             turma=turma,
                             disciplina=disc,
-                            professor=prof,
+                            professor_titular=prof,
+                            substitutos=substitutos,
                             indices_blocos=indices,
                         )
                     )

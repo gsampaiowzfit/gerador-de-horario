@@ -42,6 +42,7 @@ logger = logging.getLogger(__name__)
 
 _COLUNAS_PROFESSORES: List[str] = ["id_professor", "nome", "dias_disponiveis"]
 _COLUNAS_DISCIPLINAS: List[str] = ["id_disciplina", "nome", "carga_horaria_semanal"]
+# id_professor e id_substitutos são opcionais (podem não estar presentes ou estar vazios)
 _COLUNAS_TURMAS_BASE: List[str] = ["id_turma", "nome", "curso", "periodo", "id_disciplinas"]
 _COLUNAS_SALAS: List[str] = ["id_sala", "numero", "capacidade"]
 
@@ -353,6 +354,7 @@ class LeitorCSV:
             return {}
 
         tem_col_professor = "id_professor" in df.columns
+        tem_col_substitutos = "id_substitutos" in df.columns
         disciplinas: Dict[int, Disciplina] = {}
         ids_vistos: set[int] = set()
 
@@ -399,6 +401,16 @@ class LeitorCSV:
                 if pd.notna(val) and str(val).strip():
                     id_prof = self._parse_int(val, entidade, linha, "id_professor")
 
+            # --- id_substitutos (opcional) ---
+            id_substitutos: List[int] = []
+            if tem_col_substitutos:
+                val = row.get("id_substitutos")
+                if pd.notna(val) and str(val).strip():
+                    for parte in self._split_semicolon(str(val)):
+                        id_sub = self._parse_int(parte, entidade, linha, f"id_substitutos['{parte}']")
+                        if id_sub is not None:
+                            id_substitutos.append(id_sub)
+
             # --- Construção ---
             try:
                 disc = Disciplina(
@@ -406,6 +418,7 @@ class LeitorCSV:
                     nome=nome,
                     carga_horaria_semanal=carga,
                     id_professor=id_prof,
+                    id_substitutos=id_substitutos,
                 )
                 disciplinas[id_disc] = disc
             except Exception as exc:
@@ -610,6 +623,16 @@ class LeitorCSV:
                             f"[CRUZAMENTO] Disciplina '{disc.nome}' "
                             f"(ID {disc.id_disciplina}) referencia "
                             f"id_professor={disc.id_professor} que não existe em "
+                            "Professores.csv. → ID ÓRFÃO."
+                        )
+                
+                # 1.1 Disciplina.id_substitutos → Professores
+                for id_sub in disc.id_substitutos:
+                    if id_sub not in ids_professores:
+                        self._erro(
+                            f"[CRUZAMENTO] Disciplina '{disc.nome}' "
+                            f"(ID {disc.id_disciplina}) referencia "
+                            f"id_substituto={id_sub} que não existe em "
                             "Professores.csv. → ID ÓRFÃO."
                         )
 

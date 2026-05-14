@@ -1,6 +1,8 @@
 id_professor,nome,dias_disponiveis
-1,Ana Paula Ferreira,Segunda;Terca;Quarta;Quinta;Sexta
-2,Carlos Eduardo Souza,Segunda;Terca;Quarta;Quinta;Sexta
-3,Maria José Lima,Segunda;Terca;Quarta;Quinta;Sexta
-4,Roberto Alves,Segunda;Terca;Quarta;Quinta;Sexta
-5,Fernanda Costa,Segunda;Terca;Quarta;Quinta;Sexta
+1,Ana Paula Ferreira,Segunda;Quarta;Sexta
+2,Carlos Eduardo Souza,Terca;Quinta
+3,Maria José Lima,Segunda;Terca;Quarta
+4,Roberto Alves,Quinta;Sexta
+5,Fernanda Costa,Segunda;Quarta;Sexta
+6,João Silva (Substituto),Segunda;Terca;Quarta;Quinta;Sexta
+7,Maria Oliveira (Substituto),Segunda;Terca;Quarta;Quinta;Sexta

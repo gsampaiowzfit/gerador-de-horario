@@ -182,10 +182,16 @@ class TelaGradeEntidade(ttk.Frame):
                 self._mapa_ids[chave] = p.id_professor
 
         self._combo.config(values=opcoes, state="readonly")
-        self._combo_var.set("")
-        self._lbl_info.config(text="")
-        self._grade = None
-        self._mostrar_vazio()
+
+        if opcoes:
+            primeira = opcoes[0]
+            self._combo_var.set(primeira)
+            self._on_selecao()
+        else:
+            self._combo_var.set("")
+            self._lbl_info.config(text="")
+            self._grade = None
+            self._mostrar_vazio()
 
     def _on_selecao(self, event=None) -> None:
         """Chamado quando o usuário seleciona uma entidade no combobox."""
